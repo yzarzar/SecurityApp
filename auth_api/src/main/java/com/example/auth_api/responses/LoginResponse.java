@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 public class LoginResponse {
     private String token;
+    private String refreshToken;
     private long expiresIn;
 
     public LoginResponse setToken(String token) {
@@ -15,6 +16,11 @@ public class LoginResponse {
 
     public LoginResponse setExpiresIn(long expiresIn) {
         this.expiresIn = expiresIn;
+        return this;
+    }
+
+    public LoginResponse setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
         return this;
     }
 }
