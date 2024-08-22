@@ -1,11 +1,35 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/user.dart';
 
 class AuthService {
-  final String baseUrl = 'https://moody-gifts-call.loca.lt'; // Replace with your actual API base URL
+  final String baseUrl = 'https://wise-frogs-dance.loca.lt'; // Replace with your actual API base URL
   final storage = FlutterSecureStorage();
+
+  Future<User> uploadProfileImage(XFile file) async {
+    final token = await storage.read(key: 'token');
+    if (token == null) {
+      throw Exception('Session expired');
+    }
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/users/profile/image'),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(await http.MultipartFile.fromPath('file', file.path));
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseData = await response.stream.bytesToString();
+      return User.fromJson(jsonDecode(responseData));
+    } else {
+      throw Exception('Failed to upload profile image');
+    }
+  }
 
   Future<User> signup(String fullName, String email, String password) async {
     final response = await http.post(
@@ -66,6 +90,7 @@ class AuthService {
       await storage.write(key: 'expiresIn', value: responseData['expiresIn'].toString());
     } else {
       // Token is no longer valid or refresh failed, so log out the user
+      await logout(); // Ensure the user is logged out
       throw Exception('Session expired. Please log in again.');
     }
   }
@@ -86,6 +111,8 @@ class AuthService {
     if (response.statusCode == 200) {
       return User.fromJson(jsonDecode(response.body));
     } else if (response.statusCode == 403) {
+      // Handle session expiration
+      await logout(); // Ensure the user is logged out
       throw Exception('Session expired');
     } else {
       throw Exception('Failed to load user data');
@@ -94,6 +121,7 @@ class AuthService {
 
   Future<void> logout() async {
     await storage.deleteAll();
+    // Optionally, notify the server to invalidate the session if necessary
   }
 
   Future<bool> isLoggedIn() async {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profile_screen.dart'; // Import the profile screen
 import '../services/auth_service.dart';
 import '../models/user.dart';
 
@@ -69,12 +70,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            'Home',
+          'Home',
           style: TextStyle(
             color: Colors.white, // Set the text color to white
             fontWeight: FontWeight.bold, // Set the font weight to bold
@@ -107,7 +107,10 @@ class _HomeScreenState extends State<HomeScreen> {
               if (value == 'logout') {
                 _logout();
               } else if (value == 'profile') {
-                // Navigate to profile screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfileScreen()),
+                );
               }
             },
             itemBuilder: (BuildContext context) {
@@ -156,8 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),  
+      ),
     );
   }
-
 }

@@ -34,6 +34,15 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column(length = 255)
+    private String address;
+
+    @Column(length = 15)
+    private String phoneNumber;
+
+    @Column(name = "profile_image_path")
+    private String profileImagePath;
+
     @CreationTimestamp
     @Column(updatable = false, name = "created_at")
     private Date createdAt;
