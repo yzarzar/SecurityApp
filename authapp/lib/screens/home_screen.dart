@@ -39,6 +39,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _refresh() async {
+    await _fetchUserDetails(); // Refresh user details
+  }
+
   void _showSessionExpiredDialog() {
     showDialog(
       context: context,
@@ -69,7 +73,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: Text(
+            'Home',
+          style: TextStyle(
+            color: Colors.white, // Set the text color to white
+            fontWeight: FontWeight.bold, // Set the font weight to bold
+          ),
+        ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -81,13 +91,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: Icon(Icons.search, color: Colors.white),
             onPressed: () {
               // Handle search action
             },
           ),
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.settings, color: Colors.white),
             onPressed: () {
               // Navigate to settings screen
             },
@@ -127,19 +137,26 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Center(
-        child: _isLoading
-            ? CircularProgressIndicator()
-            : _errorMessage != null
-            ? Text(
-          _errorMessage!,
-          style: TextStyle(color: Colors.red, fontSize: 16),
-        )
-            : Text(
-          'Welcome, ${_user?.fullName ?? 'User'}!',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          children: [
+            Center(
+              child: _isLoading
+                  ? CircularProgressIndicator()
+                  : _errorMessage != null
+                  ? Text(
+                _errorMessage!,
+                style: TextStyle(color: Colors.red, fontSize: 16),
+              )
+                  : Text(
+                'Welcome, ${_user?.fullName ?? 'User'}!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
-      ),
+      ),  
     );
   }
 

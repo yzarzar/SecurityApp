@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user.dart';
 
 class AuthService {
-  final String baseUrl = 'https://empty-groups-give.loca.lt'; // Replace with your actual API base URL
+  final String baseUrl = 'https://moody-gifts-call.loca.lt'; // Replace with your actual API base URL
   final storage = FlutterSecureStorage();
 
   Future<User> signup(String fullName, String email, String password) async {
