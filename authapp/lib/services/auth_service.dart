@@ -4,12 +4,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/user.dart';
 
 class AuthService {
-  final String baseUrl = 'https://cold-rooms-divide.loca.lt/auth'; // Replace with your actual API base URL
+  final String baseUrl = 'https://empty-groups-give.loca.lt'; // Replace with your actual API base URL
   final storage = FlutterSecureStorage();
 
   Future<User> signup(String fullName, String email, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/signup'),
+      Uri.parse('$baseUrl/auth/signup'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'fullName': fullName,
@@ -28,10 +28,9 @@ class AuthService {
     }
   }
 
-
   Future<void> login(String email, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/login'),
+      Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'email': email,
@@ -42,9 +41,63 @@ class AuthService {
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
       await storage.write(key: 'token', value: responseData['token']);
+      await storage.write(key: 'refreshToken', value: responseData['refreshToken']);
       await storage.write(key: 'expiresIn', value: responseData['expiresIn'].toString());
     } else {
       throw Exception('Failed to login');
     }
+  }
+
+  Future<void> refreshToken() async {
+    final refreshToken = await storage.read(key: 'refreshToken');
+    if (refreshToken == null) {
+      throw Exception('No refresh token found');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/refresh-token'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refreshToken': refreshToken}),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      await storage.write(key: 'token', value: responseData['token']);
+      await storage.write(key: 'expiresIn', value: responseData['expiresIn'].toString());
+    } else {
+      // Token is no longer valid or refresh failed, so log out the user
+      throw Exception('Session expired. Please log in again.');
+    }
+  }
+
+  Future<User?> getUserDetails() async {
+    final token = await storage.read(key: 'token');
+    if (token == null) {
+      throw Exception('Session expired');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/me'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 403) {
+      throw Exception('Session expired');
+    } else {
+      throw Exception('Failed to load user data');
+    }
+  }
+
+  Future<void> logout() async {
+    await storage.deleteAll();
+  }
+
+  Future<bool> isLoggedIn() async {
+    final token = await storage.read(key: 'token');
+    return token != null; // This will return false if token is null
   }
 }
