@@ -28,4 +28,5 @@ class User {
       role: json['role']['name'],
     );
   }
+
 }

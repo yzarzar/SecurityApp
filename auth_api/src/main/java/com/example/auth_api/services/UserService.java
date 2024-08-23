@@ -52,15 +52,25 @@ public class UserService {
     }
 
     public User updateUserProfile(String email, UpdateUserProfileRequest updateUserProfileRequest) {
+        // Fetch the user by email
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        user.setFullName(updateUserProfileRequest.getFullName());
-        user.setAddress(updateUserProfileRequest.getAddress());
-        user.setPhoneNumber(updateUserProfileRequest.getPhoneNumber());
+        // Update fields only if they are provided in the request
+        if (updateUserProfileRequest.getFullName() != null && !updateUserProfileRequest.getFullName().isEmpty()) {
+            user.setFullName(updateUserProfileRequest.getFullName());
+        }
+        if (updateUserProfileRequest.getAddress() != null && !updateUserProfileRequest.getAddress().isEmpty()) {
+            user.setAddress(updateUserProfileRequest.getAddress());
+        }
+        if (updateUserProfileRequest.getPhoneNumber() != null && !updateUserProfileRequest.getPhoneNumber().isEmpty()) {
+            user.setPhoneNumber(updateUserProfileRequest.getPhoneNumber());
+        }
 
+        // Save and return the updated user
         return userRepository.save(user);
     }
+
 
     public List<User> allUsers() {
         List<User> users = new ArrayList<>();

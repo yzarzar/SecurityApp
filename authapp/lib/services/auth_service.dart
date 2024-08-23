@@ -3,13 +3,39 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/user.dart';
+import 'dart:typed_data';
+import 'dart:io';
 
 class AuthService {
-  final String baseUrl = 'https://wise-frogs-dance.loca.lt'; // Replace with your actual API base URL
+  final String baseUrl = 'https://moody-parts-drop.loca.lt'; // Replace with your actual API base URL
   final storage = FlutterSecureStorage();
 
+  Future<Uint8List> getProfileImageData() async {
+    final token = await _getValidToken();
+    if (token == null) {
+      throw Exception('Session expired');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/profile/image'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes; // Return the image bytes directly
+    } else if (response.statusCode == 403) {
+      await logout(); // Ensure the user is logged out
+      throw Exception('Session expired');
+    } else {
+      throw Exception('Failed to load profile image: ${response.statusCode}');
+    }
+  }
+
+
   Future<User> uploadProfileImage(XFile file) async {
-    final token = await storage.read(key: 'token');
+    final token = await _getValidToken();
     if (token == null) {
       throw Exception('Session expired');
     }
@@ -31,6 +57,7 @@ class AuthService {
     }
   }
 
+
   Future<User> signup(String fullName, String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/signup'),
@@ -41,9 +68,6 @@ class AuthService {
         'password': password,
       }),
     );
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     if (response.statusCode == 200) {
       return User.fromJson(jsonDecode(response.body));
@@ -89,14 +113,13 @@ class AuthService {
       await storage.write(key: 'token', value: responseData['token']);
       await storage.write(key: 'expiresIn', value: responseData['expiresIn'].toString());
     } else {
-      // Token is no longer valid or refresh failed, so log out the user
       await logout(); // Ensure the user is logged out
       throw Exception('Session expired. Please log in again.');
     }
   }
 
   Future<User?> getUserDetails() async {
-    final token = await storage.read(key: 'token');
+    final token = await _getValidToken();
     if (token == null) {
       throw Exception('Session expired');
     }
@@ -111,7 +134,6 @@ class AuthService {
     if (response.statusCode == 200) {
       return User.fromJson(jsonDecode(response.body));
     } else if (response.statusCode == 403) {
-      // Handle session expiration
       await logout(); // Ensure the user is logged out
       throw Exception('Session expired');
     } else {
@@ -119,13 +141,62 @@ class AuthService {
     }
   }
 
+  Future<void> updateUserDetails(String? fullName, String? email, String? address, String? phoneNumber) async {
+    final token = await _getValidToken();
+    if (token == null) {
+      throw Exception('Session expired');
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/profile'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode({
+        'fullName': fullName,
+        'email': email,
+        'address': address,
+        'phoneNumber': phoneNumber,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully updated
+    } else if (response.statusCode == 403) {
+      await logout(); // Ensure the user is logged out
+      throw Exception('Session expired');
+    } else {
+      throw Exception('Failed to update user details');
+    }
+  }
+
   Future<void> logout() async {
     await storage.deleteAll();
-    // Optionally, notify the server to invalidate the session if necessary
   }
 
   Future<bool> isLoggedIn() async {
     final token = await storage.read(key: 'token');
-    return token != null; // This will return false if token is null
+    return token != null;
+  }
+
+  // This method checks if the token is still valid, otherwise it refreshes it
+  Future<String?> _getValidToken() async {
+    final token = await storage.read(key: 'token');
+    final expiresInString = await storage.read(key: 'expiresIn');
+    if (token == null || expiresInString == null) {
+      return null;
+    }
+
+    final expiresIn = int.parse(expiresInString);
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+    // If the token is about to expire in the next 2 minutes, refresh it
+    if (expiresIn - currentTime < 120000) {
+      await refreshToken();
+      return await storage.read(key: 'token');
+    }
+
+    return token;
   }
 }
