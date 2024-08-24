@@ -7,7 +7,7 @@ import 'dart:typed_data';
 import 'dart:io';
 
 class AuthService {
-  final String baseUrl = 'https://moody-parts-drop.loca.lt'; // Replace with your actual API base URL
+  final String baseUrl = 'https://forty-chicken-hug.loca.lt'; // Replace with your actual API base URL
   final storage = FlutterSecureStorage();
 
   Future<Uint8List> getProfileImageData() async {
@@ -96,9 +96,10 @@ class AuthService {
     }
   }
 
-  Future<void> refreshToken() async {
+  Future<void> refreshTokenFun() async {
     final refreshToken = await storage.read(key: 'refreshToken');
     if (refreshToken == null) {
+      print('No refresh token found in storage');
       throw Exception('No refresh token found');
     }
 
@@ -111,11 +112,39 @@ class AuthService {
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
       await storage.write(key: 'token', value: responseData['token']);
-      await storage.write(key: 'expiresIn', value: responseData['expiresIn'].toString());
+      await storage.write(key: 'expiresIn', value: (DateTime.now().millisecondsSinceEpoch + 120000).toString());
     } else {
       await logout(); // Ensure the user is logged out
       throw Exception('Session expired. Please log in again.');
     }
+  }
+
+  // This method checks if the token is still valid, otherwise it refreshes it
+  Future<String?> _getValidToken() async {
+    final token = await storage.read(key: 'token');
+    final expiresInString = await storage.read(key: 'expiresIn');
+    final refreshToken = await storage.read(key: 'refreshToken');
+
+    if (token == null || expiresInString == null || refreshToken == null) {
+      return null;
+    }
+
+    final expiresIn = int.parse(expiresInString);
+    final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+    // Check if the token is close to expiration (less than 1 minute remaining)
+    if (expiresIn - currentTime < 30000) {
+      try {
+        await refreshTokenFun(); // Correctly invoking the refreshToken function
+        final newToken = await storage.read(key: 'token');
+        return newToken;
+      } catch (e) {
+        print('Error during token refresh: $e');
+        return null;
+      }
+    }
+
+    return token;
   }
 
   Future<User?> getUserDetails() async {
@@ -180,23 +209,13 @@ class AuthService {
     return token != null;
   }
 
-  // This method checks if the token is still valid, otherwise it refreshes it
-  Future<String?> _getValidToken() async {
+  Future<void> _debugTokenStorage() async {
     final token = await storage.read(key: 'token');
-    final expiresInString = await storage.read(key: 'expiresIn');
-    if (token == null || expiresInString == null) {
-      return null;
-    }
+    final refreshToken = await storage.read(key: 'refreshToken');
+    final expiresIn = await storage.read(key: 'expiresIn');
 
-    final expiresIn = int.parse(expiresInString);
-    final currentTime = DateTime.now().millisecondsSinceEpoch;
-
-    // If the token is about to expire in the next 2 minutes, refresh it
-    if (expiresIn - currentTime < 120000) {
-      await refreshToken();
-      return await storage.read(key: 'token');
-    }
-
-    return token;
+    print('Token: $token');
+    print('Refresh Token: $refreshToken');
+    print('Expires In: $expiresIn');
   }
 }

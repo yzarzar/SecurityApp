@@ -80,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       await _fetchUserDetails();
       await _fetchProfileImage();
-      Navigator.of(context).pop();  // Close the popup after updating
+      Navigator.of(context).pop(); // Close the dialog after updating
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
@@ -159,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 TextButton(
                   child: Text('Cancel'),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(); // Close the dialog on cancel
                   },
                 ),
                 ElevatedButton(
@@ -189,51 +189,123 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profile'),
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _errorMessage != null
-          ? Center(child: Text(_errorMessage!, style: TextStyle(color: Colors.red)))
+          ? Center(
+        child: Text(
+          _errorMessage!,
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+      )
           : RefreshIndicator(
         onRefresh: _fetchUserDetails,
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // Display profile image and update button
-            GestureDetector(
-              onTap: _updateProfileImage,
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: _profileImageBytes != null
-                    ? MemoryImage(_profileImageBytes!)
-                    : null,
-                child: _profileImageBytes == null
-                    ? Icon(Icons.person, size: 50, color: Colors.grey[800])
-                    : null,
-                backgroundColor: Colors.grey[300],
+            // Profile image section
+            Container(
+              padding: EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: _updateProfileImage,
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 80,
+                          backgroundImage: _profileImageBytes != null
+                              ? MemoryImage(_profileImageBytes!)
+                              : null,
+                          child: _profileImageBytes == null
+                              ? Icon(Icons.person, size: 80, color: Colors.grey[800])
+                              : null,
+                          backgroundColor: Colors.grey[300],
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundColor: Colors.blueAccent,
+                            child: Icon(Icons.edit, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    _user?.fullName ?? 'N/A',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    _user?.email ?? 'N/A',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _updateProfileImage,
-              child: Text('Change Profile Image'),
-            ),
-            SizedBox(height: 16),
-            Text('Full Name: ${_user?.fullName ?? 'N/A'}'),
-            SizedBox(height: 8),
-            Text('Email: ${_user?.email ?? 'N/A'}'),
-            SizedBox(height: 8),
-            Text('Phone: ${_user?.phoneNumber ?? 'N/A'}'),
-            SizedBox(height: 8),
-            Text('Address: ${_user?.address ?? 'N/A'}'),
-            SizedBox(height: 16),
+            SizedBox(height: 20),
+            // Profile details
+            _buildDetailRow('Phone', _user?.phoneNumber ?? 'N/A'),
+            _buildDetailRow('Address', _user?.address ?? 'N/A'),
+            SizedBox(height: 20),
+            // Update profile button
             ElevatedButton(
               onPressed: _showUpdateForm,
               child: Text('Update Profile'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 15.0),
+                textStyle: TextStyle(fontSize: 16),
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  value,
+                  style: TextStyle(fontSize: 16),
+                  textAlign: TextAlign.end,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Divider(thickness: 1.0, color: Colors.grey[300]),
+      ],
     );
   }
 }

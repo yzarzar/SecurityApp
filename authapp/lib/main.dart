@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Auth App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primaryColor: Colors.blueAccent, colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue).copyWith(error: Colors.redAccent),    // Color used for error messages
       ),
       home: isLoggedIn ? HomeScreen() : LoginScreen(), // Use isLoggedIn to decide the home screen
       routes: {
