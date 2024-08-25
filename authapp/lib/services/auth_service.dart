@@ -4,11 +4,55 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/user.dart';
 import 'dart:typed_data';
-import 'dart:io';
 
 class AuthService {
-  final String baseUrl = 'https://forty-chicken-hug.loca.lt'; // Replace with your actual API base URL
+  final String baseUrl = 'https://calm-coins-dream.loca.lt'; // Replace with your actual API base URL
   final storage = FlutterSecureStorage();
+
+  Future<void> createAdmin({required String fullName, required String email, required String password}) async {
+    // Your backend endpoint to create an admin
+    final url = Uri.parse('${baseUrl}/admins');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await _getValidToken()}',
+      },
+      body: json.encode({
+        'fullName': fullName,
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to create admin: ${response.body}');
+    }
+  }
+
+  Future<Uint8List> getProfileImageData1(String imagePath) async {
+    final token = await _getValidToken();
+    if (token == null) {
+      throw Exception('Session expired');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/profile/image/$imagePath'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes; // Return the image bytes directly
+    } else if (response.statusCode == 403) {
+      await logout(); // Ensure the user is logged out
+      throw Exception('Session expired');
+    } else {
+      throw Exception('Failed to load profile image: ${response.statusCode}');
+    }
+  }
 
   Future<Uint8List> getProfileImageData() async {
     final token = await _getValidToken();
@@ -56,7 +100,6 @@ class AuthService {
       throw Exception('Failed to upload profile image');
     }
   }
-
 
   Future<User> signup(String fullName, String email, String password) async {
     final response = await http.post(
@@ -217,5 +260,21 @@ class AuthService {
     print('Token: $token');
     print('Refresh Token: $refreshToken');
     print('Expires In: $expiresIn');
+  }
+
+  Future<List<User>> getAllUsers() async {
+    final response = await http.get(
+      Uri.parse('${baseUrl}/users/'),
+      headers: {
+        'Authorization': 'Bearer ${await _getValidToken()}',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonResponse = json.decode(response.body);
+      return jsonResponse.map((json) => User.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load users');
+    }
   }
 }

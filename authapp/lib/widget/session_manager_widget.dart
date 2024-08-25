@@ -28,7 +28,7 @@ class _SessionManagerWidgetState extends State<SessionManagerWidget> {
   }
 
   void _startSessionCheck() {
-    _timer = Timer.periodic(Duration(seconds: 30), (timer) {
+    _timer = Timer.periodic(Duration(seconds: 60), (timer) {
       _checkSession();
     });
   }

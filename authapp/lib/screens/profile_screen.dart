@@ -5,6 +5,11 @@ import '../services/auth_service.dart';
 import '../models/user.dart';
 
 class ProfileScreen extends StatefulWidget {
+
+  final User? user;
+
+  ProfileScreen({this.user});
+
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
@@ -126,26 +131,99 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Update Profile'),
+              title: Text(
+                'Update Profile',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: _fullNameController,
-                      decoration: InputDecoration(labelText: 'Full Name'),
+                    // Full Name TextField with minimal design
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100], // Subtle background color
+                        borderRadius: BorderRadius.circular(6.0), // Smaller rounded corners
+                      ),
+                      child: TextField(
+                        controller: _fullNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Full Name',
+                          labelStyle: TextStyle(fontSize: 14, color: Colors.grey[700]), // Smaller font size and subtle color
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none, // Remove default border
+                            borderRadius: BorderRadius.circular(6.0), // Match container's rounded corners
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0), // Compact padding
+                        ),
+                        style: TextStyle(fontSize: 14), // Smaller input text size
+                      ),
                     ),
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(labelText: 'Email'),
+                    SizedBox(height: 10), // Smaller space between fields
+
+                    // Email TextField
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          labelStyle: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(6.0),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                        ),
+                        style: TextStyle(fontSize: 14),
+                      ),
                     ),
-                    TextField(
-                      controller: _phoneNumberController,
-                      decoration: InputDecoration(labelText: 'Phone Number'),
+                    SizedBox(height: 10),
+
+                    // Phone Number TextField
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: TextField(
+                        controller: _phoneNumberController,
+                        decoration: InputDecoration(
+                          labelText: 'Phone Number',
+                          labelStyle: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(6.0),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                        ),
+                        style: TextStyle(fontSize: 14),
+                      ),
                     ),
-                    TextField(
-                      controller: _addressController,
-                      decoration: InputDecoration(labelText: 'Address'),
+                    SizedBox(height: 10),
+
+                    // Address TextField
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
+                      child: TextField(
+                        controller: _addressController,
+                        decoration: InputDecoration(
+                          labelText: 'Address',
+                          labelStyle: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide.none,
+                            borderRadius: BorderRadius.circular(6.0),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                        ),
+                        style: TextStyle(fontSize: 14),
+                      ),
                     ),
                     if (isUpdating)
                       Padding(
@@ -174,6 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     setState(() {
                       isUpdating = false;
                     });
+                    Navigator.of(context).pop(); // Close the dialog after update
                   },
                 ),
               ],

@@ -2,8 +2,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../widget/session_manager_widget.dart';
 import 'profile_screen.dart';
+import 'users_screen.dart'; // Import the UsersScreen
 import '../services/auth_service.dart';
 import '../models/user.dart';
+import 'create_admin_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -11,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _authService = AuthService();
+  final AuthService _authService = AuthService();
   User? _user;
   bool _isLoading = true;
   String? _errorMessage;
@@ -21,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _fetchUserDetails();
-    _fetchProfileImage(); // Fetch the profile image as well
+    _fetchProfileImage();
   }
 
   Future<void> _fetchUserDetails() async {
@@ -55,8 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refresh() async {
-    await _fetchUserDetails(); // Refresh user details
-    await _fetchProfileImage(); // Refresh profile image
+    await _fetchUserDetails();
+    await _fetchProfileImage();
   }
 
   Future<void> _logout() async {
@@ -69,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return SessionManagerWidget(
       child: Scaffold(
         appBar: AppBar(
-          title: Text(
+          title: const Text(
             'Home',
             style: TextStyle(
               color: Colors.white,
@@ -88,25 +90,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 BoxShadow(
                   color: Colors.black.withOpacity(0.2),
                   blurRadius: 6,
-                  offset: Offset(0, 2),
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.search, color: Colors.white),
+              icon: const Icon(Icons.search, color: Colors.white),
               onPressed: () {
                 // Handle search action
               },
-              padding: EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
             IconButton(
-              icon: Icon(Icons.settings, color: Colors.white),
+              icon: const Icon(Icons.settings, color: Colors.white),
               onPressed: () {
                 // Navigate to settings screen
               },
-              padding: EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
@@ -117,11 +119,34 @@ class _HomeScreenState extends State<HomeScreen> {
                     context,
                     MaterialPageRoute(builder: (context) => ProfileScreen()),
                   );
+                } else if (value == 'users') {
+                  if (_user?.role == 'SUPER_ADMIN' || _user?.role == 'ADMIN') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => UsersScreen()),
+                    );
+                  } else {
+                    // Optionally show a message if not authorized
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('You are not authorized to view this page')),
+                    );
+                  }
+                } else if (value == 'create_admin') {
+                  if (_user?.role == 'SUPER_ADMIN') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CreateAdminScreen()),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('You are not authorized to perform this action')),
+                    );
+                  }
                 }
               },
               itemBuilder: (BuildContext context) {
                 return [
-                  PopupMenuItem<String>(
+                  const PopupMenuItem<String>(
                     value: 'profile',
                     child: Row(
                       children: [
@@ -131,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  PopupMenuItem<String>(
+                  const PopupMenuItem<String>(
                     value: 'logout',
                     child: Row(
                       children: [
@@ -141,10 +166,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
+                  if (_user?.role == 'SUPER_ADMIN' || _user?.role == 'ADMIN')
+                    const PopupMenuItem<String>(
+                      value: 'users',
+                      child: Row(
+                        children: [
+                          Icon(Icons.list, color: Colors.black54),
+                          SizedBox(width: 8),
+                          Text('Users'),
+                        ],
+                      ),
+                    ),
+                  if (_user?.role == 'SUPER_ADMIN')
+                    const PopupMenuItem<String>(
+                      value: 'create_admin',
+                      child: Row(
+                        children: [
+                          Icon(Icons.add, color: Colors.black54),
+                          SizedBox(width: 8),
+                          Text('Create Admin'),
+                        ],
+                      ),
+                    ),
                 ];
               },
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: _profileImageBytes != null
                     ? CircleAvatar(
                   backgroundImage: MemoryImage(_profileImageBytes!),
@@ -156,14 +203,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   radius: 20,
                 ),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
           ],
         ),
         body: RefreshIndicator(
           onRefresh: _refresh,
           child: ListView(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -174,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 100,
                     width: 100,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
                   // Welcome Message with Gradient and Shadow
                   Text(
@@ -187,17 +234,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         Shadow(
                           blurRadius: 10,
                           color: Colors.black.withOpacity(0.3),
-                          offset: Offset(2, 2),
+                          offset: const Offset(2, 2),
                         ),
                       ],
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
                   // Hero Section - Powered by Spring Security & JWT
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.blueAccent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -205,14 +252,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         BoxShadow(
                           color: Colors.black.withOpacity(0.15),
                           blurRadius: 10,
-                          offset: Offset(0, 5),
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
+                        const Text(
                           'Powered by',
                           style: TextStyle(
                             fontSize: 22,
@@ -222,8 +269,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 10),
-                        Text(
+                        const SizedBox(height: 10),
+                        const Text(
                           'Spring Security & JWT',
                           style: TextStyle(
                             fontSize: 26,
@@ -233,15 +280,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             shadows: [
                               Shadow(
                                 blurRadius: 10,
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black,
                                 offset: Offset(3, 3),
                               ),
                             ],
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 20),
-                        Text(
+                        const SizedBox(height: 20),
+                        const Text(
                           'Experience the pinnacle of security with Spring Security and JWT. Our system ensures your sessions are safeguarded with cutting-edge authentication and token management, empowering your journey with robust protection and seamless access.',
                           style: TextStyle(
                             fontSize: 16,
@@ -250,20 +297,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         Image.asset(
-                          'assets/images/security.png', // Make sure to add this image to your assets
+                          'assets/images/security.png', // Add this image to your assets
                           height: 150,
                           width: 150,
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
                   // Explanation of JWT Tokens
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(8),
@@ -271,13 +318,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
                           blurRadius: 4,
-                          offset: Offset(0, 2),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: const [
                         Text(
                           'About JWT Authentication',
                           style: TextStyle(
@@ -309,24 +356,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                  _isLoading
-                      ? CircularProgressIndicator()
-                      : _errorMessage != null
-                      ? Text(
-                    _errorMessage!,
-                    style: TextStyle(color: Colors.red),
-                  )
-                      : _user != null
-                      ? Text(
-                    'Email: ${_user!.email}',
-                    style: TextStyle(fontSize: 18),
-                  )
-                      : Text(
-                    'User data not available.',
-                    style: TextStyle(color: Colors.red),
-                  ),
+                  if (_isLoading)
+                    const CircularProgressIndicator()
+                  else if (_errorMessage != null)
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                    )
+                  else if (_user != null)
+                      Text(
+                        '${_user!.email}!',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w100,
+                        ),
+                      ),
                 ],
               ),
             ],
